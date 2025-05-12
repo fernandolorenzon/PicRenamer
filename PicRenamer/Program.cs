@@ -33,20 +33,36 @@ class Program
                         string baseFileName = Path.GetFileNameWithoutExtension(jsonFile);
                         string newFileName = $"{modelName}_{baseFileName}";
 
+                        if (baseFileName.StartsWith(modelName + "_"))
+                        {
+                            Console.WriteLine($"✔ File already has model name: {baseFileName}. Skipping...");
+                            continue;
+                        }
+
                         string jsonDest = Path.Combine(folderPath, newFileName + ".json");
                         string jpegSource = Path.Combine(folderPath, baseFileName + ".jpeg");
                         string jpegDest = Path.Combine(folderPath, newFileName + ".jpeg");
 
-                        File.Move(jsonFile, jsonDest, overwrite: true);
-
                         if (File.Exists(jpegSource))
                         {
                             File.Move(jpegSource, jpegDest, overwrite: true);
-                            Console.WriteLine($"Renamed: {jpegSource} -> {jpegDest}");
+                            Console.WriteLine($"✨ Renamed: {jpegSource} -> {jpegDest}");
                         }
                         else
                         {
-                            Console.WriteLine($"JPEG not found for: {baseFileName}");
+                            Console.WriteLine($"🗑 JPEG not found for: {baseFileName}. Sending orphaned JSON to Recycle Bin.");
+                            try
+                            {
+                                Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(
+                                    jsonFile,
+                                    Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
+                                    Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin
+                                );
+                            }
+                            catch (Exception deleteEx)
+                            {
+                                Console.WriteLine($"Failed to delete {jsonFile}: {deleteEx.Message}");
+                            }
                         }
                     }
                 }
