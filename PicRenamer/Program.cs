@@ -1,8 +1,16 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 
+/// <summary>
+/// Main program class for renaming EasyDiffusion JSON and JPEG files to include the model name,
+/// or deleting orphaned JSON files if the corresponding JPEG is missing.
+/// </summary>
 class Program
 {
+    /// <summary>
+    /// Entry point of the application. Prompts the user for a folder path, processes each JSON file
+    /// to extract the model name, renames files accordingly, and deletes orphaned JSON files.
+    /// </summary>
     static void Main()
     {
         Console.WriteLine("Enter the full path to the folder with the EasyDiffusion files:");
@@ -39,14 +47,22 @@ class Program
                             continue;
                         }
 
-                        string jsonDest = Path.Combine(folderPath, newFileName + ".json");
                         string jpegSource = Path.Combine(folderPath, baseFileName + ".jpeg");
+                        if (File.Exists(jpegSource) && Path.GetFileNameWithoutExtension(jpegSource).StartsWith(modelName + "_"))
+                        {
+                            Console.WriteLine($"✔ JPEG already has model name: {Path.GetFileName(jpegSource)}. Skipping...");
+                            continue;
+                        }
+
+                        string jsonDest = Path.Combine(folderPath, newFileName + ".json");
                         string jpegDest = Path.Combine(folderPath, newFileName + ".jpeg");
 
                         if (File.Exists(jpegSource))
                         {
                             File.Move(jpegSource, jpegDest, overwrite: true);
+                            File.Move(jsonFile, jsonDest, overwrite: true);
                             Console.WriteLine($"✨ Renamed: {jpegSource} -> {jpegDest}");
+                            Console.WriteLine($"✨ Renamed: {jsonFile} -> {jsonDest}");
                         }
                         else
                         {
@@ -76,6 +92,12 @@ class Program
         Console.WriteLine("Done!");
     }
 
+    /// <summary>
+    /// Extracts the model name from a given model path using a regular expression.
+    /// The model name is expected to appear after the last '/' and before the first '_' character.
+    /// </summary>
+    /// <param name="path">The model path string from which to extract the model name.</param>
+    /// <returns>The extracted model name, or null if not found.</returns>
     static string ExtractModelName(string path)
     {
         if (string.IsNullOrEmpty(path)) return null;
