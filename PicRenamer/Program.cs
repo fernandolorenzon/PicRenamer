@@ -95,6 +95,7 @@ class Program
     /// <summary>
     /// Extracts the model name from a given model path using a regular expression.
     /// The model name is expected to appear after the last '/' and before the first '_' character.
+    /// Additionally, removes trailing "By" if present.
     /// </summary>
     /// <param name="path">The model path string from which to extract the model name.</param>
     /// <returns>The extracted model name, or null if not found.</returns>
@@ -102,7 +103,16 @@ class Program
     {
         if (string.IsNullOrEmpty(path)) return null;
 
+        // Match after the last '/' and before the first '_'
         var match = Regex.Match(path, @"\/([^\/_]+)_");
-        return match.Success ? match.Groups[1].Value : null;
+        if (!match.Success) return null;
+
+        string modelName = match.Groups[1].Value;
+
+        // Remove trailing "By" if present
+        if (modelName.EndsWith("By"))
+            modelName = modelName.Substring(0, modelName.Length - 2);
+
+        return modelName;
     }
 }
